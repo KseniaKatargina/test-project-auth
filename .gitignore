@@ -1,12 +1,16 @@
 
 ###> symfony/framework-bundle ###
 /.env.local
+.env
 /.env.local.php
 /.env.*.local
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
 /vendor/
+/node_modules/
+/.idea/
+/*.log
 ###< symfony/framework-bundle ###
 
 ###> phpunit/phpunit ###
@@ -23,3 +27,9 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+docker-compose.override.yml
+*.pid
+*.sock
+
+*.iml
+*.vscode/

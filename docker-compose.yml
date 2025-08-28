@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:15
+    container_name: auth-db
+    environment:
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_pass
+      POSTGRES_DB: auth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  app:
+    image: php:8.2-cli
+    container_name: symfony-app
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    depends_on:
+      - db
+    command: tail -f /dev/null
+
+volumes:
+  db-data:
