@@ -10,16 +10,23 @@ services:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+    networks:
+      - auth-network
 
   app:
-    image: php:8.2-cli
+    build: .
     container_name: symfony-app
     volumes:
       - .:/var/www/html
     working_dir: /var/www/html
     depends_on:
       - db
-    command: tail -f /dev/null
+    networks:
+      - auth-network
+    tty: true
 
 volumes:
   db-data:
+
+networks:
+  auth-network:
