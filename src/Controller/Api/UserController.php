@@ -74,4 +74,58 @@ class UserController extends AbstractController
             'data'=>$users
         ]);
     }
+
+    #[Route('/{id}', name: 'api_user_view', methods: ['GET'])]
+    public function viewUser(int $id, Request $request): JsonResponse
+    {
+        $currentUser = $request->attributes->get('user');
+        $user = $this->userService->getUserOrFail($id, $currentUser);
+
+        return $this->json(['status' => 'success', 'data' => [
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'roles' => $user->getRoles(),
+            'isActive' => $user->isActive(),
+            'createdAt' => $user->getCreatedAt()->format('c'),
+            'updatedAt' => $user->getUpdatedAt()->format('c'),
+        ]]);
+    }
+
+    #[Route('/{id}', name: 'api_user_update', methods: ['PATCH'])]
+    public function updateUser(int $id, Request $request): JsonResponse
+    {
+        $currentUser = $request->attributes->get('user');
+        $user = $this->userService->getUserOrFail($id, $currentUser);
+
+        $data = json_decode($request->getContent(), true);
+        $user = $this->userService->updateUser($user, $data);
+
+        return $this->json(['status' => 'success', 'data' => [
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'roles' => $user->getRoles(),
+            'isActive' => $user->isActive(),
+            'createdAt' => $user->getCreatedAt()->format('c'),
+            'updatedAt' => $user->getUpdatedAt()->format('c'),
+        ]]);
+    }
+
+    #[Route('/{id}/block', name: 'api_user_block', methods: ['POST'])]
+    public function blockUser(int $id, Request $request): JsonResponse
+    {
+        $currentUser = $request->attributes->get('user');
+        if (!in_array('ROLE_ADMIN', $currentUser->getRoles())) {
+            throw new AccessDeniedException('Только ADMIN может блокировать');
+        }
+
+        $user = $this->userService->getUserById($id);
+        if (!$user) {
+            return $this->json(['status' => 'error', 'message' => 'Пользователь не найден'], 404);
+        }
+
+        $user = $this->userService->blockUser($user);
+
+        return $this->json(['status' => 'success', 'message' => 'Пользователь заблокирован']);
+    }
+
 }

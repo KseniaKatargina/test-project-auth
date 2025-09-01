@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Exception\ApiException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class UserService
 {
@@ -54,4 +55,47 @@ class UserService
 
         return $result;
     }
+
+    public function getUserById(int $id): ?User
+    {
+        return $this->em->getRepository(User::class)->find($id);
+    }
+
+    public function updateUser(User $user, array $data): User
+    {
+        if (isset($data['email'])) {
+            $user->setEmail($data['email']);
+        }
+        if (isset($data['roles'])) {
+            $user->setRoles($data['roles']);
+        }
+        if (isset($data['isActive'])) {
+            $user->setIsActive((bool)$data['isActive']);
+        }
+
+        $this->em->flush();
+        return $user;
+    }
+
+    public function blockUser(User $user): User
+    {
+        $user->setIsActive(false);
+        $this->em->flush();
+        return $user;
+    }
+
+    public function getUserOrFail(int $id, User $currentUser): User
+    {
+        $user = $this->getUserById($id);
+        if (!$user) {
+            throw new \RuntimeException('Пользователь не найден');
+        }
+
+        if (!in_array('ROLE_ADMIN', $currentUser->getRoles()) && $currentUser->getId() !== $user->getId()) {
+            throw new AccessDeniedException('Нет доступа');
+        }
+
+        return $user;
+    }
+
 }
