@@ -35,4 +35,23 @@ class UserService
 
         return $this->em->getRepository(User::class)->findOneBy(['email' => $dto->email]);
     }
+
+    public function getAllUsers(): array
+    {
+        $users = $this->em->getRepository(User::class)->findAll();
+
+        $result = [];
+        foreach ($users as $user) {
+            $result[] = [
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
+                'roles' => $user->getRoles(),
+                'isActive' => $user->isActive(),
+                'createdAt' => $user->getCreatedAt()->format('c'),
+                'updatedAt' => $user->getUpdatedAt()->format('c'),
+            ];
+        }
+
+        return $result;
+    }
 }

@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/users')]
@@ -48,5 +49,29 @@ class UserController extends AbstractController
                 'roles' => $user->getRoles(),
             ]
         ], JsonResponse::HTTP_CREATED);
+    }
+
+    #[Route('', name: 'api_user_list', methods: ['GET'])]
+    public function listUsers(Request $request): JsonResponse
+    {
+        $user = $request->attributes->get('user');
+
+        if (!$user) {
+            return $this->json(['status'=>'error','message'=>'Missing or invalid token'], 401);
+        }
+
+        if (!in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            return $this->json([
+                'status'=>'error',
+                'message'=>'Только ADMIN может просматривать пользователей'
+            ], 403);
+        }
+
+        $users = $this->userService->getAllUsers();
+
+        return $this->json([
+            'status'=>'success',
+            'data'=>$users
+        ]);
     }
 }
