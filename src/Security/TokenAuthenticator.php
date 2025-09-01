@@ -24,11 +24,21 @@ class TokenAuthenticator
             return;
         }
 
-        $this->logger->info('TokenAuthenticator triggered', ['path' => $request->getPathInfo()]);
+        $path = $request->getPathInfo();
+        $this->logger->info('TokenAuthenticator triggered', ['path' => $path]);
+
+        $publicPaths = [
+            '/api/login',
+            '/api/register',
+        ];
+
+        if (in_array($path, $publicPaths, true)) {
+            return;
+        }
 
         $authHeader = $request->headers->get('Authorization');
         if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
-            $event->setResponse(new JsonResponse(['status'=>'error','message'=>'Missing token'],401));
+            $event->setResponse(new JsonResponse(['status'=>'error','message'=>'Missing token'], 401));
             return;
         }
 
@@ -37,7 +47,7 @@ class TokenAuthenticator
         $token = $this->em->getRepository(Token::class)->findOneBy(['value' => trim($tokenValue)]);
 
         if (!$token || $token->getExpiresAt() < new \DateTimeImmutable()) {
-            $event->setResponse(new JsonResponse(['status'=>'error','message'=>'Missing or invalid token'],401));
+            $event->setResponse(new JsonResponse(['status'=>'error','message'=>'Missing or invalid token'], 401));
             return;
         }
 
@@ -48,4 +58,5 @@ class TokenAuthenticator
             'roles' => $token->getAppUser()->getRoles()
         ]);
     }
+
 }

@@ -127,5 +127,4 @@ class UserController extends AbstractController
 
         return $this->json(['status' => 'success', 'message' => 'Пользователь заблокирован']);
     }
-
 }
