@@ -44,6 +44,18 @@ class AuthService
             $tokenValue = bin2hex(random_bytes(32));
             $expiresAt = new \DateTimeImmutable('+1 hour');
 
+            $refreshTokenValue = bin2hex(random_bytes(32));
+            $refreshExpiresAt = new \DateTimeImmutable('+30 days');
+
+            $refreshToken = (new Token())
+                ->setAppUser($user)
+                ->setValue($refreshTokenValue)
+                ->setType('refresh')
+                ->setCreatedAt(new \DateTimeImmutable())
+                ->setExpiresAt($refreshExpiresAt);
+
+            $this->em->persist($refreshToken);
+
             $token = (new Token())
                 ->setAppUser($user)
                 ->setValue($tokenValue)
@@ -71,8 +83,10 @@ class AuthService
             ]);
 
             return [
-                'token' => $tokenValue,
+                'access_token' => $tokenValue,
                 'expires_at' => $expiresAt->format('c'),
+                'refresh_token' => $refreshTokenValue,
+                'refresh_expires_at' => $refreshExpiresAt->format('c'),
             ];
         } catch (\Throwable $e) {
             $this->em->rollback();
@@ -83,5 +97,38 @@ class AuthService
             throw $e;
         }
     }
+
+    public function refreshToken(string $refreshToken): array
+    {
+        $token = $this->em->getRepository(Token::class)->findOneBy([
+            'value' => $refreshToken,
+            'type' => 'refresh'
+        ]);
+
+        if (!$token || $token->getExpiresAt() < new \DateTimeImmutable()) {
+            throw new ApiException('Refresh token недействителен', 401);
+        }
+
+        $user = $token->getAppUser();
+
+        $newAccessTokenValue = bin2hex(random_bytes(32));
+        $expiresAt = new \DateTimeImmutable('+1 hour');
+
+        $newAccessToken = (new Token())
+            ->setAppUser($user)
+            ->setValue($newAccessTokenValue)
+            ->setType('access')
+            ->setCreatedAt(new \DateTimeImmutable())
+            ->setExpiresAt($expiresAt);
+
+        $this->em->persist($newAccessToken);
+        $this->em->flush();
+
+        return [
+            'access_token' => $newAccessTokenValue,
+            'expires_at' => $expiresAt->format('c'),
+        ];
+    }
+
 
 }

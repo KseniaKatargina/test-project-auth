@@ -39,4 +39,21 @@ class AuthController extends AbstractController
             'data' => $result,
         ]);
     }
+
+    #[Route('/api/token/refresh', methods: ['POST'])]
+    public function refresh(Request $request, AuthService $authService): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        if (!isset($data['refresh_token'])) {
+            return $this->json(['error' => 'refresh_token обязателен'], 400);
+        }
+
+        $result = $authService->refreshToken($data['refresh_token']);
+
+        return $this->json([
+            'status' => 'success',
+            'data' => $result,
+        ]);
+    }
+
 }
