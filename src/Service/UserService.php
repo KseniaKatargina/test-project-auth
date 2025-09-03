@@ -12,6 +12,10 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class UserService
 {
+    private EntityManagerInterface $em;
+    private UserPasswordHasherInterface $passwordHasher;
+    private LoggerInterface $logger;
+
     public function __construct(
         EntityManagerInterface $em,
         UserPasswordHasherInterface $passwordHasher,

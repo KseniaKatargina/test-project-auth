@@ -14,6 +14,10 @@ use App\Exception\ApiException;
 
 class AuthService
 {
+    private UserPasswordHasherInterface $passwordHasher;
+    private EntityManagerInterface $em;
+    private LoggerInterface $logger;
+
     public function __construct(
         EntityManagerInterface $em,
         UserPasswordHasherInterface $passwordHasher,
